@@ -46,7 +46,7 @@ const HomePage = () => {
   }, [auth.reqUser]);
 
   useEffect(() => {
-    soket = io("http://localhost:5000/");
+    soket = io("http://whatsapp-clone-ashok.herokuapp.com/");
     if(auth.reqUser)soket.emit("setup", auth.reqUser);
 
     // socket.on("connected", () => setSocketConnected(true));
@@ -121,7 +121,7 @@ const HomePage = () => {
       }
      
     });
-  });
+  },[messages]);
 
   return (
     <div className="relative">
