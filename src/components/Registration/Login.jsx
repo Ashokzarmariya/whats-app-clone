@@ -13,7 +13,8 @@ const Login = () => {
  const navigate = useNavigate();
  const dispatch = useDispatch();
  const {auth}=useSelector((store)=>store)
-
+  const token = localStorage.getItem("token");
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setInputData((values) => ({ ...values, [name]: value }));
@@ -27,10 +28,10 @@ const Login = () => {
 
  //dispatch current user if user already signup
  useEffect(() => {
-  const token = localStorage.getItem("token");
+  
   if (token) dispatch(currentUser(token))
   
- }, [])
+ }, [token])
  
 
  //redirect to main page if register success
@@ -41,7 +42,7 @@ const Login = () => {
  },[auth.reqUser])
   return (
     <div className="flex justify-center min-h-screen items-center">
-      <div className="w-[30%] p-10  shadow-md">
+      <div className="w-[30%] p-10  shadow-md bg-white">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <p className="mb-2">Email</p>
@@ -76,12 +77,12 @@ const Login = () => {
           </div>
         </form>
         <div className="flex space-x-3 item-center mt-5">
-          <p className="">Already Have Account?</p>
+          <p className="">Create New Account</p>
           <p
             onClick={() => navigate("/Signup")}
             className="text-blue-500 hover:text-blue-800 cursor-pointer"
           >
-            Login
+            signup
           </p>
         </div>
       </div>

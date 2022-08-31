@@ -19,7 +19,8 @@ import { createNewMessage, getAllMessage } from "../../Redux/Message/Action";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 
-var soket, selectedChatCompare;
+let soket, selectedChatCompare;
+
 const HomePage = () => {
   const dispatch = useDispatch();
   const { auth, chat, message } = useSelector((store) => store);
@@ -29,6 +30,7 @@ const HomePage = () => {
   const [currentChat, setCurrentChat] = useState(null);
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
+  const [soketConnected, setSoketConnected] = useState(false);
 
   // console.log("curentChats", currentChat);
   // console.log("currentChat", currentChat);
@@ -46,10 +48,10 @@ const HomePage = () => {
   }, [auth.reqUser]);
 
   useEffect(() => {
-    soket = io("http://whatsapp-clone-ashok.herokuapp.com/");
-    if(auth.reqUser)soket.emit("setup", auth.reqUser);
+    soket = io("https://whatsapp-clone-ashok.herokuapp.com/");
+    if (auth.reqUser?._id) soket.emit("add-user", auth.reqUser._id);
 
-    // socket.on("connected", () => setSocketConnected(true));
+    soket.on("connected", () => setSoketConnected(true));
     // socket.on("typing", () => setIsTyping(true));
     // socket.on("stop typing", () => setIsTyping(false));
 
@@ -82,15 +84,15 @@ const HomePage = () => {
   useEffect(() => {
     if (!currentChat?._id) return;
     dispatch(getAllMessage({ chatId: currentChat._id, token }));
-    soket.emit("join_room", currentChat?._id);
+
+    selectedChatCompare = currentChat;
   }, [currentChat]);
 
   //setMessage and sent soket to new_message
   useEffect(() => {
     if (message.messages) setMessages(message.messages);
     if (message.newMessage) {
-      soket.emit("new_message", message.newMessage);
-
+      soket.emit("send-msg", message.newMessage);
       setMessages([...messages, message.newMessage]);
     }
   }, [message.newMessage, message.messages]);
@@ -100,18 +102,9 @@ const HomePage = () => {
     dispatch(searchUser(keyword));
   };
 
-  //all chat isReqUser or Another User
-  const isAnotherUser = (item) => {
-    if (auth.reqUser?._id !== item.users[0]._id) {
-      return item.users[0].username;
-    }
-    return item.users[1].username;
-  };
-
   useEffect(() => {
-    
-    soket.on("message_recieved", (newMessageRecieved) => {
-      console.log("newMessageRecived---", newMessageRecieved)
+    soket.on("msg-recieve", (newMessageRecieved) => {
+      console.log("newMessageRecived---", newMessageRecieved);
       if (
         !selectedChatCompare || // if chat is not selected or doesn't match current chat
         selectedChatCompare._id !== newMessageRecieved.chat._id
@@ -119,9 +112,8 @@ const HomePage = () => {
       } else {
         setMessages([...messages, newMessageRecieved]);
       }
-     
     });
-  },[messages]);
+  });
 
   return (
     <div className="relative">
@@ -134,7 +126,7 @@ const HomePage = () => {
               <div className="flex items-center space-x-3">
                 <img
                   className="rounded-full w-16 h-16"
-                  src="https://mock-12-api.herokuapp.com/s/ashok"
+                  src={auth.reqUser?.profilePic}
                   alt=""
                 />
                 <p>{auth.reqUser?.username}</p>
@@ -205,21 +197,25 @@ const HomePage = () => {
           </div>
         </div>
 
-        <div className="w-[70%] bg-blue-100 relative">
+       { chat.chats!==null && <div className="w-[70%] bg-blue-100 relative">
           {/* header part */}
           <div className="header absolute top-0 w-full bg-[#f0f2f5]">
             <div className="  flex justify-between ">
               <div className="py-3 space-x-4 flex items-center px-3 bg">
                 <img
                   className="w-10 h-10 rounded-full"
-                  src={auth.reqUser?._id !== currentChat?.users[0]._id
-                    ? currentChat?.users[0].profilePic
-                    : currentChat?.users[1].profilePic}
+                  src={
+                    auth.reqUser?._id !== currentChat?.users[0]._id
+                      ? currentChat?.users[0].profilePic
+                      : currentChat?.users[1].profilePic
+                  }
                   alt=""
                 />
-                <p>{auth.reqUser?._id !== currentChat?.users[0]._id
-                        ? currentChat?.users[0].username
-                        : currentChat?.users[1].username}</p>
+                <p>
+                  {auth.reqUser?._id !== currentChat?.users[0]._id
+                    ? currentChat?.users[0].username
+                    : currentChat?.users[1].username}
+                </p>
               </div>
               <div className="py-3 space-x-4 flex items-center px-3 bg">
                 <AiOutlineSearch />
@@ -263,7 +259,8 @@ const HomePage = () => {
               <BsMicFill />
             </div>
           </div>
-        </div>
+        </div>}
+
       </div>
     </div>
   );

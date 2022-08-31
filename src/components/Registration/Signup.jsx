@@ -14,7 +14,7 @@ const Signup = () => {
  const dispatch = useDispatch();
  const {auth}=useSelector((store)=>store)
  console.log(auth);
-
+const token = localStorage.getItem("token");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,10 +23,10 @@ const Signup = () => {
 
 //dispatch current user if user already signup
  useEffect(() => {
-  const token = localStorage.getItem("token");
+  
   if (token) dispatch(currentUser(token))
   console.log(token)
- }, [])
+ }, [auth.isAuth,token])
  
 
  //redirect to main page if register success
