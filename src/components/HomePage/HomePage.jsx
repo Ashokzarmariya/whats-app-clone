@@ -53,9 +53,6 @@ const HomePage = () => {
     if (auth.reqUser?._id) soket.emit("add-user", auth.reqUser._id);
 
     soket.on("connected", () => setSoketConnected(true));
-    // socket.on("typing", () => setIsTyping(true));
-    // socket.on("stop typing", () => setIsTyping(false));
-    // eslint-disable-next-line
   }, [auth.reqUser]);
 
   // setCurrentChat
@@ -69,7 +66,10 @@ const HomePage = () => {
   const handleCurrentChat = (item) => {
     setCurrentChat(item);
     soket.emit("join_room", item._id);
-    if (item._id === notifications[0]?.chat._id) setNotifications([])
+    if (item._id === notifications[0]?.chat._id){ setNotifications([])}
+    messageRef.current.scrollIntoView({
+      behavior: "smooth",
+    });
   };
 
   //create new Single chat
@@ -280,13 +280,15 @@ const HomePage = () => {
                 {messages.length > 0 &&
                   messages?.map((item, index) => (
                     <Message
-                      messageRef={messageRef}
+                      
                       key={item._id}
                       isReqUserMessage={item.sender._id !== auth.reqUser._id}
                       content={`${item.content}`}
                      
                     />
                   ))}
+                
+                <div ref={messageRef}></div>
               </div>
             </div>
 
