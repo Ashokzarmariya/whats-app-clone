@@ -19,6 +19,7 @@ import { createNewMessage, getAllMessage } from "../../Redux/Message/Action";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import "./Home.css";
+import { useRef } from "react";
 
 let soket, selectedChatCompare;
 
@@ -32,7 +33,10 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [soketConnected, setSoketConnected] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const messageRef = useRef();
 
+  console.log("notification", notifications);
   //dispatch current user if user signup or login
   useEffect(() => {
     if (token) dispatch(currentUser(token));
@@ -65,7 +69,7 @@ const HomePage = () => {
   const handleCurrentChat = (item) => {
     setCurrentChat(item);
     soket.emit("join_room", item._id);
-    console.log('handleCurrentChat')
+    if(item._id===notifications[0].chat._id)setNotifications(0)
   };
 
   //create new Single chat
@@ -79,10 +83,14 @@ const HomePage = () => {
     if (token) dispatch(getAllChat(token));
   }, [token, chat.singleChat]);
 
-  //createnew message
+  //create new message
   const handleCreateNewMessage = () => {
     const data = { token, chatId: currentChat?._id, content };
     dispatch(createNewMessage(data));
+    // messageRef.current.scrollIntoView({ behavior: "smooth" })
+    messageRef.current.scrollIntoView({
+      behavior: "smooth",
+    });
   };
 
   //get all message
@@ -102,7 +110,6 @@ const HomePage = () => {
 
   useEffect(() => {
     if (message.messages) setMessages(message.messages);
-    console.log("message", message, messages);
   }, [message.messages]);
 
   //search user by name
@@ -111,9 +118,27 @@ const HomePage = () => {
   };
 
   useEffect(() => {
+    soket.on("send-notification", (notification) => {
+      // console.log("notification-recived from server---", notification);
+      console.log(!currentChat || currentChat._id !== notification.chat._id,"-----------")
+
+      if (
+        !currentChat ||  currentChat._id !== notification.chat._id
+      ) {
+        setNotifications([notification, ...notifications]);
+        
+      }
+    });
+
     soket.on("message-recived", (newMessage) => {
-      console.log("message-recived from server---", newMessage);
-      setMessages([...messages, newMessage]);
+      if (
+        currentChat && currentChat._id === newMessage.chat._id
+      ) {
+        setMessages([...messages, newMessage]);
+      } 
+      // console.log("message-recived from server---", newMessage);
+
+      // setMessages([...messages, newMessage]);
     });
   });
 
@@ -173,6 +198,7 @@ const HomePage = () => {
                     isChat={false}
                     name={item.username}
                     userImg={item.profilePic}
+                    
                   />
                 </div>
               ))}
@@ -193,6 +219,9 @@ const HomePage = () => {
                         ? item.users[0].profilePic
                         : item.users[1].profilePic
                     }
+                    notification={notifications.length}
+                    isNotification={notifications[0]?.chat._id === item._id}
+                    message={item._id===messages[messages.length-1].chat._id &&messages[messages.length-1]?.content}
                   />
                 </div>
               ))}
@@ -250,9 +279,11 @@ const HomePage = () => {
                 {messages.length > 0 &&
                   messages?.map((item, index) => (
                     <Message
+                      messageRef={messageRef}
                       key={item._id}
                       isReqUserMessage={item.sender._id !== auth.reqUser._id}
                       content={`${item.content}`}
+                     
                     />
                   ))}
               </div>
