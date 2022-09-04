@@ -18,7 +18,7 @@ import { createSingleChat, getAllChat } from "../../Redux/Chat/Action";
 import { createNewMessage, getAllMessage } from "../../Redux/Message/Action";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
-import './Home.css';
+import "./Home.css";
 
 let soket, selectedChatCompare;
 
@@ -33,8 +33,6 @@ const HomePage = () => {
   const [messages, setMessages] = useState([]);
   const [soketConnected, setSoketConnected] = useState(false);
 
- 
-
   //dispatch current user if user signup or login
   useEffect(() => {
     if (token) dispatch(currentUser(token));
@@ -47,6 +45,7 @@ const HomePage = () => {
 
   useEffect(() => {
     soket = io("https://whatsapp-clone-ashok.herokuapp.com/");
+    // soket = io("http://localhost:5000/");
     if (auth.reqUser?._id) soket.emit("add-user", auth.reqUser._id);
 
     soket.on("connected", () => setSoketConnected(true));
@@ -58,14 +57,15 @@ const HomePage = () => {
   // setCurrentChat
   useEffect(() => {
     if (chat.singleChat) {
-      setCurrentChat(chat.singleChat)
+      setCurrentChat(chat.singleChat);
       soket.emit("join_room", chat.singleChat._id);
     }
   }, [chat.singleChat]);
 
   const handleCurrentChat = (item) => {
     setCurrentChat(item);
-    
+    soket.emit("join_room", item._id);
+    console.log('handleCurrentChat')
   };
 
   //create new Single chat
@@ -90,7 +90,7 @@ const HomePage = () => {
     if (!currentChat?._id) return;
     dispatch(getAllMessage({ chatId: currentChat._id, token }));
     selectedChatCompare = currentChat;
-  }, [currentChat,message.newMessage]);
+  }, [currentChat, message.newMessage]);
 
   //setMessage and sent soket to new_message
   useEffect(() => {
@@ -102,12 +102,12 @@ const HomePage = () => {
 
   useEffect(() => {
     if (message.messages) setMessages(message.messages);
-    console.log("message", message,messages);
+    console.log("message", message, messages);
   }, [message.messages]);
 
   //search user by name
   const handleSearch = (keyword) => {
-    dispatch(searchUser({userId:auth.reqUser._id,keyword}));
+    dispatch(searchUser({ userId: auth.reqUser._id, keyword }));
   };
 
   useEffect(() => {
@@ -199,19 +199,21 @@ const HomePage = () => {
           </div>
         </div>
 
-       {!currentChat && <div className="w-[70%] flex flex-col items-center justify-center">
-          <div className="max-w-[70%] text-center">
-            <img
-              src="https://res.cloudinary.com/zarmariya/image/upload/v1662264838/whatsapp_multi_device_support_update_image_1636207150180-removebg-preview_jgyy3t.png"
-              alt=""
-            />
-            <h1 className="text-4xl text-gray-600">WhatsApp Web</h1>
-            <p className=" my-9">
-              send and reveive message without keeping your phone online. Use
-              WhatsApp on Up to 4 Linked devices and 1 phone at the same time.
-            </p>
+        {!currentChat && (
+          <div className="w-[70%] flex flex-col items-center justify-center">
+            <div className="max-w-[70%] text-center">
+              <img
+                src="https://res.cloudinary.com/zarmariya/image/upload/v1662264838/whatsapp_multi_device_support_update_image_1636207150180-removebg-preview_jgyy3t.png"
+                alt=""
+              />
+              <h1 className="text-4xl text-gray-600">WhatsApp Web</h1>
+              <p className=" my-9">
+                send and reveive message without keeping your phone online. Use
+                WhatsApp on Up to 4 Linked devices and 1 phone at the same time.
+              </p>
+            </div>
           </div>
-        </div>}
+        )}
 
         {currentChat && (
           <div className="w-[70%] bg-blue-100 relative">
