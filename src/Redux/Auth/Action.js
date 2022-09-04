@@ -45,9 +45,9 @@ export const currentUser = (token) => async (dispatch) => {
 };
 
 
-export const searchUser = (keyword) => async (dispatch) => {
+export const searchUser = (data) => async (dispatch) => {
   const res = await fetch(
-    `https://whatsapp-clone-ashok.herokuapp.com/users?search=${keyword}`,
+    `https://whatsapp-clone-ashok.herokuapp.com/users?search=${data.keyword}`,
     {
       method: "GET",
       headers: {
@@ -56,5 +56,7 @@ export const searchUser = (keyword) => async (dispatch) => {
     }
   );
   const user = await res.json();
- dispatch({type:SEARCH_USER, payload:user})
+
+  const temp=user.filter((item)=>item._id!==data.userId)
+ dispatch({type:SEARCH_USER, payload:temp})
 };

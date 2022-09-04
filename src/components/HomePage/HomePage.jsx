@@ -18,6 +18,7 @@ import { createSingleChat, getAllChat } from "../../Redux/Chat/Action";
 import { createNewMessage, getAllMessage } from "../../Redux/Message/Action";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
+import './Home.css';
 
 let soket, selectedChatCompare;
 
@@ -32,10 +33,8 @@ const HomePage = () => {
   const [messages, setMessages] = useState([]);
   const [soketConnected, setSoketConnected] = useState(false);
 
-  // console.log("curentChats", currentChat);
-  // console.log("currentChat", currentChat);
-  // console.log("message", messages,"------",message.newMessage);
-  // console.log(auth.reqUser, "----------------req User");
+ 
+
   //dispatch current user if user signup or login
   useEffect(() => {
     if (token) dispatch(currentUser(token));
@@ -44,24 +43,30 @@ const HomePage = () => {
   //redirect to signup page if user not authenticate
   useEffect(() => {
     if (!auth.reqUser) navigate("/signup");
-    if (chat.chats) setCurrentChat(chat.chats[0]);
   }, [auth.reqUser]);
 
   useEffect(() => {
-    soket = io("https://whatsapp-clone-ashok.herokuapp.com/");
+    soket = io("http://localhost:5000/");
     if (auth.reqUser?._id) soket.emit("add-user", auth.reqUser._id);
 
     soket.on("connected", () => setSoketConnected(true));
     // socket.on("typing", () => setIsTyping(true));
     // socket.on("stop typing", () => setIsTyping(false));
-
     // eslint-disable-next-line
   }, [auth.reqUser]);
 
-  //setCurrentChat
+  // setCurrentChat
   useEffect(() => {
-    if (chat.singleChat) setCurrentChat(chat.singleChat);
+    if (chat.singleChat) {
+      setCurrentChat(chat.singleChat)
+      soket.emit("join_room", chat.singleChat._id);
+    }
   }, [chat.singleChat]);
+
+  const handleCurrentChat = (item) => {
+    setCurrentChat(item);
+    
+  };
 
   //create new Single chat
   const createNewChat = (userId) => {
@@ -84,34 +89,31 @@ const HomePage = () => {
   useEffect(() => {
     if (!currentChat?._id) return;
     dispatch(getAllMessage({ chatId: currentChat._id, token }));
-
     selectedChatCompare = currentChat;
-  }, [currentChat]);
+  }, [currentChat,message.newMessage]);
 
   //setMessage and sent soket to new_message
   useEffect(() => {
-    if (message.messages) setMessages(message.messages);
     if (message.newMessage) {
-      soket.emit("send-msg", message.newMessage);
+      soket.emit("send-message", message.newMessage);
       setMessages([...messages, message.newMessage]);
     }
-  }, [message.newMessage, message.messages]);
+  }, [message.newMessage]);
+
+  useEffect(() => {
+    if (message.messages) setMessages(message.messages);
+    console.log("message", message,messages);
+  }, [message.messages]);
 
   //search user by name
   const handleSearch = (keyword) => {
-    dispatch(searchUser(keyword));
+    dispatch(searchUser({userId:auth.reqUser._id,keyword}));
   };
 
   useEffect(() => {
-    soket.on("msg-recieve", (newMessageRecieved) => {
-      console.log("newMessageRecived---", newMessageRecieved);
-      if (
-        !selectedChatCompare || // if chat is not selected or doesn't match current chat
-        selectedChatCompare._id !== newMessageRecieved.chat._id
-      ) {
-      } else {
-        setMessages([...messages, newMessageRecieved]);
-      }
+    soket.on("message-recived", (newMessage) => {
+      console.log("message-recived from server---", newMessage);
+      setMessages([...messages, newMessage]);
     });
   });
 
@@ -177,7 +179,7 @@ const HomePage = () => {
 
             {chat.chats &&
               chat.chats?.map((item, index) => (
-                <div onClick={() => setCurrentChat(item)} key={item._id}>
+                <div onClick={() => handleCurrentChat(item)} key={item._id}>
                   <hr />
                   <UserChat
                     isChat={true}
@@ -197,70 +199,85 @@ const HomePage = () => {
           </div>
         </div>
 
-       { chat.chats!==null && <div className="w-[70%] bg-blue-100 relative">
-          {/* header part */}
-          <div className="header absolute top-0 w-full bg-[#f0f2f5]">
-            <div className="  flex justify-between ">
-              <div className="py-3 space-x-4 flex items-center px-3 bg">
-                <img
-                  className="w-10 h-10 rounded-full"
-                  src={
-                    auth.reqUser?._id !== currentChat?.users[0]._id
-                      ? currentChat?.users[0].profilePic
-                      : currentChat?.users[1].profilePic
-                  }
-                  alt=""
-                />
-                <p>
-                  {auth.reqUser?._id !== currentChat?.users[0]._id
-                    ? currentChat?.users[0].username
-                    : currentChat?.users[1].username}
-                </p>
-              </div>
-              <div className="py-3 space-x-4 flex items-center px-3 bg">
-                <AiOutlineSearch />
-                <BsThreeDotsVertical />
-              </div>
-            </div>
-          </div>
-
-          {/* message secition */}
-
-          <div className="px-10   h-[85vh] overflow-y-scroll">
-            <div className=" space-y-1 flex flex-col justify-center border mt-20 py-2">
-              {messages.length > 1 &&
-                messages?.map((item, index) => (
-                  <Message
-                    key={item._id}
-                    isReqUserMessage={index % 2 === 0}
-                    content={`${item.content}`}
-                  />
-                ))}
-            </div>
-          </div>
-
-          {/* footer send message part */}
-          <div className="footer bg-[#f0f2f5] absolute bottom-0 w-full py-3 text-2xl">
-            <div className="flex justify-between items-center px-5">
-              <BsEmojiSmile />
-              <ImAttachment />
-              <input
-                onChange={(e) => setContent(e.target.value)}
-                className="py-2 outline-none border-none bg-white pl-4 rounded-md w-[85%]"
-                placeholder="Type message"
-                value={content}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleCreateNewMessage();
-                    setContent("");
-                  }
-                }}
-              />
-              <BsMicFill />
-            </div>
+       {!currentChat && <div className="w-[70%] flex flex-col items-center justify-center">
+          <div className="max-w-[70%] text-center">
+            <img
+              src="https://res.cloudinary.com/zarmariya/image/upload/v1662264838/whatsapp_multi_device_support_update_image_1636207150180-removebg-preview_jgyy3t.png"
+              alt=""
+            />
+            <h1 className="text-4xl text-gray-600">WhatsApp Web</h1>
+            <p className=" my-9">
+              send and reveive message without keeping your phone online. Use
+              WhatsApp on Up to 4 Linked devices and 1 phone at the same time.
+            </p>
           </div>
         </div>}
 
+        {currentChat && (
+          <div className="w-[70%] bg-blue-100 relative">
+            {/* header part */}
+            <div className="header absolute top-0 w-full bg-[#f0f2f5]">
+              <div className="  flex justify-between ">
+                <div className="py-3 space-x-4 flex items-center px-3 bg">
+                  <img
+                    className="w-10 h-10 rounded-full"
+                    src={
+                      auth.reqUser?._id !== currentChat?.users[0]._id
+                        ? currentChat?.users[0].profilePic
+                        : currentChat?.users[1].profilePic
+                    }
+                    alt=""
+                  />
+                  <p>
+                    {auth.reqUser?._id !== currentChat?.users[0]._id
+                      ? currentChat?.users[0].username
+                      : currentChat?.users[1].username}
+                  </p>
+                </div>
+                <div className="py-3 space-x-4 flex items-center px-3 bg">
+                  <AiOutlineSearch />
+                  <BsThreeDotsVertical />
+                </div>
+              </div>
+            </div>
+
+            {/* message secition */}
+
+            <div className="px-10   h-[85vh] overflow-y-scroll">
+              <div className=" space-y-1 flex flex-col justify-center border mt-20 py-2">
+                {messages.length > 0 &&
+                  messages?.map((item, index) => (
+                    <Message
+                      key={item._id}
+                      isReqUserMessage={item.sender._id !== auth.reqUser._id}
+                      content={`${item.content}`}
+                    />
+                  ))}
+              </div>
+            </div>
+
+            {/* footer send message part */}
+            <div className="footer bg-[#f0f2f5] absolute bottom-0 w-full py-3 text-2xl">
+              <div className="flex justify-between items-center px-5">
+                <BsEmojiSmile />
+                <ImAttachment />
+                <input
+                  onChange={(e) => setContent(e.target.value)}
+                  className="py-2 outline-none border-none bg-white pl-4 rounded-md w-[85%]"
+                  placeholder="Type message"
+                  value={content}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleCreateNewMessage();
+                      setContent("");
+                    }
+                  }}
+                />
+                <BsMicFill />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

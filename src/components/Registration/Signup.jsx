@@ -13,7 +13,7 @@ const Signup = () => {
   const navigate = useNavigate();
  const dispatch = useDispatch();
  const {auth}=useSelector((store)=>store)
- console.log(auth);
+
 const token = localStorage.getItem("token");
 
   const handleChange = (e) => {
@@ -25,14 +25,14 @@ const token = localStorage.getItem("token");
  useEffect(() => {
   
   if (token) dispatch(currentUser(token))
-  console.log(token)
+ 
  }, [auth.isAuth,token])
  
 
  //redirect to main page if register success
  useEffect(() => {
   if (auth.reqUser) {
-   console.log("reqUser", auth.reqUser)
+  
    navigate("/")
   }
  },[auth.reqUser])
