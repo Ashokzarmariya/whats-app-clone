@@ -69,8 +69,7 @@ const HomePage = () => {
   const handleCurrentChat = (item) => {
     setCurrentChat(item);
     soket.emit("join_room", item._id);
-    if (item._id === notifications[0]?.chat._id) setNotifications(0)
-    selectedChatCompare = item;
+    if (item._id === notifications[0]?.chat._id) setNotifications([])
   };
 
   //create new Single chat
