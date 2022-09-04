@@ -69,7 +69,8 @@ const HomePage = () => {
   const handleCurrentChat = (item) => {
     setCurrentChat(item);
     soket.emit("join_room", item._id);
-    if(item._id===notifications[0]?.chat._id)setNotifications(0)
+    if (item._id === notifications[0]?.chat._id) setNotifications(0)
+    selectedChatCompare = item;
   };
 
   //create new Single chat
@@ -120,10 +121,10 @@ const HomePage = () => {
   useEffect(() => {
     soket.on("send-notification", (notification) => {
       // console.log("notification-recived from server---", notification);
-      console.log(!currentChat || currentChat._id !== notification.chat._id,"-----------")
+      console.log(!selectedChatCompare || selectedChatCompare._id !== notification.chat._id,"-----------")
 
       if (
-        !currentChat ||  currentChat._id !== notification.chat._id
+        !selectedChatCompare || selectedChatCompare._id !== notification.chat._id
       ) {
         setNotifications([notification, ...notifications]);
         
@@ -132,7 +133,7 @@ const HomePage = () => {
 
     soket.on("message-recived", (newMessage) => {
       if (
-        currentChat && currentChat._id === newMessage.chat._id
+        selectedChatCompare && selectedChatCompare._id === newMessage.chat._id
       ) {
         setMessages([...messages, newMessage]);
       } 
@@ -221,7 +222,8 @@ const HomePage = () => {
                     }
                     notification={notifications.length}
                     isNotification={notifications[0]?.chat._id === item._id}
-                    message={item._id===messages[messages.length-1]?.chat._id &&messages[messages.length-1]?.content}
+                    message={(item._id === messages[messages.length - 1]?.chat._id && messages[messages.length - 1]?.content) ||
+                    (item._id===notifications[0]?.chat._id && notifications[0]?.content)}
                   />
                 </div>
               ))}
