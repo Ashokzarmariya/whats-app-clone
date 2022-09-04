@@ -69,7 +69,7 @@ const HomePage = () => {
   const handleCurrentChat = (item) => {
     setCurrentChat(item);
     soket.emit("join_room", item._id);
-    if(item._id===notifications[0].chat._id)setNotifications(0)
+    if(item._id===notifications[0]?.chat._id)setNotifications(0)
   };
 
   //create new Single chat
@@ -221,7 +221,7 @@ const HomePage = () => {
                     }
                     notification={notifications.length}
                     isNotification={notifications[0]?.chat._id === item._id}
-                    message={item._id===messages[messages.length-1].chat._id &&messages[messages.length-1]?.content}
+                    message={item._id===messages[messages.length-1]?.chat._id &&messages[messages.length-1]?.content}
                   />
                 </div>
               ))}
