@@ -149,10 +149,10 @@ const HomePage = () => {
         <div className="w-[30%] bg-[#e7e7e7] h-full ">
           <div className=" w-full ">
             {/* profile img and icons */}
-            <div className="flex justify-between items-center  px-3 py-1">
+            <div className="flex justify-between items-center  px-3 py-3">
               <div className="flex items-center space-x-3">
                 <img
-                  className="rounded-full w-16 h-16"
+                  className="rounded-full w-10 h-10"
                   src={auth.reqUser?.profilePic}
                   alt=""
                 />
@@ -183,7 +183,8 @@ const HomePage = () => {
             </div>
           </div>
           {/* all user */}
-          <div className="bg-white overflow-y-scroll h-[73vh]">
+
+          <div className="bg-white overflow-y-scroll h-[76.8vh]">
             {querys &&
               auth.searchUser?.map((item, index) => (
                 <div
