@@ -7,7 +7,7 @@ import {
   BsMicFill,
   BsEmojiSmile,
 } from "react-icons/bs";
-import { TbCircleDashed } from "react-icons/tb";
+import { TbCircleDashed, TbMessagePlus } from "react-icons/tb";
 import { AiOutlineSearch } from "react-icons/ai";
 import { ImAttachment } from "react-icons/im";
 import UserChat from "./UserChat";
@@ -20,6 +20,9 @@ import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import "./Home.css";
 import { useRef } from "react";
+import Picker from "emoji-picker-react";
+import Profile from "./Profile";
+import {BsArrowLeft} from 'react-icons/bs'
 
 let soket, selectedChatCompare;
 
@@ -35,8 +38,10 @@ const HomePage = () => {
   const [soketConnected, setSoketConnected] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const messageRef = useRef();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isProfile, setIsProfile] = useState(false);
 
-  console.log("notification", notifications);
+
   //dispatch current user if user signup or login
   useEffect(() => {
     if (token) dispatch(currentUser(token));
@@ -66,7 +71,9 @@ const HomePage = () => {
   const handleCurrentChat = (item) => {
     setCurrentChat(item);
     soket.emit("join_room", item._id);
-    if (item._id === notifications[0]?.chat._id){ setNotifications([])}
+    if (item._id === notifications[0]?.chat._id) {
+      setNotifications([]);
+    }
     messageRef.current.scrollIntoView({
       behavior: "smooth",
     });
@@ -120,39 +127,61 @@ const HomePage = () => {
   useEffect(() => {
     soket.on("send-notification", (notification) => {
       // console.log("notification-recived from server---", notification);
-      console.log(!selectedChatCompare || selectedChatCompare._id !== notification.chat._id,"-----------")
+      console.log(
+        !selectedChatCompare ||
+          selectedChatCompare._id !== notification.chat._id,
+        "-----------"
+      );
 
       if (
-        !selectedChatCompare || selectedChatCompare._id !== notification.chat._id
+        !selectedChatCompare ||
+        selectedChatCompare._id !== notification.chat._id
       ) {
         setNotifications([notification, ...notifications]);
-        
       }
     });
 
     soket.on("message-recived", (newMessage) => {
       if (
-        selectedChatCompare && selectedChatCompare._id === newMessage.chat._id
+        selectedChatCompare &&
+        selectedChatCompare._id === newMessage.chat._id
       ) {
         setMessages([...messages, newMessage]);
-      } 
-      // console.log("message-recived from server---", newMessage);
-
-      // setMessages([...messages, newMessage]);
+      }
     });
   });
+
+  const onEmojiClick = (event, emojiObject) => {
+   
+    setContent(content + " " + emojiObject.emoji);
+  };
+
+  const handleEmojiBoxClose = () => {
+   
+      setIsOpen(false);
+
+  };
+
+  const handleBack = () => setIsProfile(false)
+
+  
 
   return (
     <div className="relative">
       <div className="py-14 bg-[#00a884] w-full"></div>
       <div className="absolute w-[97vw] h-[94vh] bg-[#f0f2f5] top-6 left-6 flex">
-        <div className="w-[30%] bg-[#e7e7e7] h-full ">
-          <div className=" w-full ">
+        <div className="w-[30%] bg-[#e8e9ec] h-full ">
+         { isProfile && <div className="h-full">
+            <Profile handleBack={handleBack}/>
+          </div>}
+         {!isProfile && <div>
+            <div className=" w-full ">
             {/* profile img and icons */}
             <div className="flex justify-between items-center  px-3 py-3">
               <div className="flex items-center space-x-3">
-                <img
-                  className="rounded-full w-10 h-10"
+                  <img
+                    onClick={()=>setIsProfile(true)}
+                  className="rounded-full w-10 h-10 cursor-pointer"
                   src={auth.reqUser?.profilePic}
                   alt=""
                 />
@@ -199,7 +228,6 @@ const HomePage = () => {
                     isChat={false}
                     name={item.username}
                     userImg={item.profilePic}
-                    
                   />
                 </div>
               ))}
@@ -222,12 +250,19 @@ const HomePage = () => {
                     }
                     notification={notifications.length}
                     isNotification={notifications[0]?.chat._id === item._id}
-                    message={(item._id === messages[messages.length - 1]?.chat._id && messages[messages.length - 1]?.content) ||
-                    (item._id===notifications[0]?.chat._id && notifications[0]?.content)}
+                    message={
+                      (item._id === messages[messages.length - 1]?.chat._id &&
+                        messages[messages.length - 1]?.content) ||
+                      (item._id === notifications[0]?.chat._id &&
+                        notifications[0]?.content)
+                    }
                   />
                 </div>
               ))}
           </div>
+          </div>}
+          
+
         </div>
 
         {!currentChat && (
@@ -276,28 +311,30 @@ const HomePage = () => {
 
             {/* message secition */}
 
-            <div className="px-10   h-[85vh] overflow-y-scroll">
+            <div onClick={handleEmojiBoxClose} className="px-10   h-[85vh] overflow-y-scroll">
               <div className=" space-y-1 flex flex-col justify-center border mt-20 py-2">
                 {messages.length > 0 &&
                   messages?.map((item, index) => (
                     <Message
-                      
                       key={item._id}
                       isReqUserMessage={item.sender._id !== auth.reqUser._id}
                       content={`${item.content}`}
-                     
                     />
                   ))}
-                
+
                 <div ref={messageRef}></div>
               </div>
             </div>
 
             {/* footer send message part */}
             <div className="footer bg-[#f0f2f5] absolute bottom-0 w-full py-3 text-2xl">
-              <div className="flex justify-between items-center px-5">
-                <BsEmojiSmile />
+              <div className="flex justify-between items-center px-5 relative ">
+                <BsEmojiSmile onClick={() => setIsOpen(!isOpen)} className="cursor-pointer" />
                 <ImAttachment />
+                <div className={`${isOpen?"block":"hidden"} absolute bottom-16`}>
+                  <Picker onEmojiClick={onEmojiClick} />
+                </div>
+
                 <input
                   onChange={(e) => setContent(e.target.value)}
                   className="py-2 outline-none border-none bg-white pl-4 rounded-md w-[85%]"
