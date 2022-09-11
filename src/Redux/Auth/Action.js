@@ -1,4 +1,4 @@
-import { LOGIN, REGISTER, REQ_USER, SEARCH_USER } from "./ActionType";
+import { LOGIN, REGISTER, REQ_USER, SEARCH_USER, UPDATE_USER } from "./ActionType";
 
 export const register = (data) => async (dispatch) => {
   const res = await fetch("https://whatsapp-clone-ashok.herokuapp.com/register", {
@@ -59,4 +59,22 @@ export const searchUser = (data) => async (dispatch) => {
 
   const temp=user.filter((item)=>item._id!==data.userId)
  dispatch({type:SEARCH_USER, payload:temp})
+};
+
+export const updateUser = (data) => async (dispatch) => {
+  
+  const res = await fetch(
+    `https://whatsapp-clone-ashok.herokuapp.com/users/edit/${data.id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${data.token}`,
+      },
+      body:JSON.stringify(data.data)
+    }
+  );
+  const user = await res.json();
+console.log("updated user",user)
+ dispatch({type:UPDATE_USER, payload:user})
 };

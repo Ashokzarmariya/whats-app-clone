@@ -45,7 +45,7 @@ const HomePage = () => {
   //dispatch current user if user signup or login
   useEffect(() => {
     if (token) dispatch(currentUser(token));
-  }, [token]);
+  }, [token,auth.updatedUser]);
 
   //redirect to signup page if user not authenticate
   useEffect(() => {
