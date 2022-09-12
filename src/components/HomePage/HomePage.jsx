@@ -52,7 +52,6 @@ const HomePage = () => {
   //redirect to signup page if user not authenticate
   useEffect(() => {
     if (!auth.reqUser) navigate("/signup");
-    else setOpen(true);
   }, [auth.reqUser]);
 
   useEffect(() => {
@@ -166,7 +165,9 @@ const HomePage = () => {
   };
 
   const handleBack = () => setIsProfile(false)
-
+  useEffect(() => {
+    setOpen(true);
+},[])
   
 
   return (
