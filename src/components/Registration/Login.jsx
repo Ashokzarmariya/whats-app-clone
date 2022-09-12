@@ -3,18 +3,21 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { currentUser, login } from "../../Redux/Auth/Action";
+import SimpleSnackbar from "../HomePage/SimpleSnackbar";
 
 const Login = () => {
   const [inputData, setInputData] = useState({
     email: "",
     password: "",
   });
+  const [open, setOpen] = useState(false);
 
  const navigate = useNavigate();
  const dispatch = useDispatch();
  const {auth}=useSelector((store)=>store)
   const token = localStorage.getItem("token");
-  
+
+  console.log("auth",auth)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setInputData((values) => ({ ...values, [name]: value }));
@@ -23,8 +26,9 @@ const Login = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     dispatch(login(inputData))
- };
- 
+  };
+  
+ const handleClose = () => setOpen(false)
 
  //dispatch current user if user already signup
  useEffect(() => {
@@ -36,12 +40,20 @@ const Login = () => {
 
  //redirect to main page if register success
  useEffect(() => {
-  if (auth.reqUser) {
-   navigate("/")
+   if (auth.reqUser) {
+    
+    navigate("/")
   }
- },[auth.reqUser])
+ }, [auth.reqUser])
+  
+  useEffect(() => {
+    if (auth.login?.isAuth===false) {
+      setOpen(true)
+    }
+  },[auth.login])
   return (
-    <div className="flex justify-center min-h-screen items-center">
+    <div>
+      <div className="flex justify-center min-h-screen items-center">
       <div className="w-[30%] p-10  shadow-md bg-white">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -86,7 +98,16 @@ const Login = () => {
           </p>
         </div>
       </div>
+     
+      </div>
+      <SimpleSnackbar
+        message={auth.login?.message}
+        open={open}
+        handleClose={handleClose}
+        type={"error"}
+      />
     </div>
+    
   );
 };
 

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { currentUser, register } from "../../Redux/Auth/Action";
+import SimpleSnackbar from "../HomePage/SimpleSnackbar";
 
 const Signup = () => {
   const [inputData, setInputData] = useState({
@@ -13,8 +14,10 @@ const Signup = () => {
   const navigate = useNavigate();
  const dispatch = useDispatch();
  const {auth}=useSelector((store)=>store)
-
+  const [open, setOpen] = useState(false);
+  
 const token = localStorage.getItem("token");
+  const handleClose = () => setOpen(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,8 +47,17 @@ const token = localStorage.getItem("token");
    dispatch(register(inputData))
     
   };
+
+
+  useEffect(() => {
+    if (auth.signup?.isAuth===false) {
+      setOpen(true)
+    }
+  },[auth.signup])
   return (
-    <div className="flex flex-col justify-center min-h-screen items-center">
+
+    <div>
+      <div className="flex flex-col justify-center min-h-screen items-center">
       <div className="w-[30%] p-10 shadow-md bg-white">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -101,7 +113,15 @@ const token = localStorage.getItem("token");
           </p>
         </div>
       </div>
+      </div>
+      <SimpleSnackbar
+        message={auth.signup?.message}
+        open={open}
+        handleClose={handleClose}
+        type={"error"}
+      />
     </div>
+    
   );
 };
 

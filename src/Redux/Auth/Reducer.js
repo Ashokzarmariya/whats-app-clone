@@ -2,7 +2,8 @@ import { LOGIN, REGISTER, REQ_USER, SEARCH_USER, UPDATE_USER } from "./ActionTyp
 
 const initialState = {
  reqUser: null,
- isAtuh:false
+ isAtuh: 'pending',
+ login: null
 }
 export const authReducer = (store = initialState, { type, payload }) => {
  if (type === REGISTER) {

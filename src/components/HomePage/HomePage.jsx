@@ -23,6 +23,7 @@ import { useRef } from "react";
 import Picker from "emoji-picker-react";
 import Profile from "./Profile";
 import {BsArrowLeft} from 'react-icons/bs'
+import SimpleSnackbar from "./SimpleSnackbar";
 
 let soket, selectedChatCompare;
 
@@ -40,7 +41,8 @@ const HomePage = () => {
   const messageRef = useRef();
   const [isOpen, setIsOpen] = useState(false);
   const [isProfile, setIsProfile] = useState(false);
-
+  const [open, setOpen] = useState(false);
+  const handleClose = () => setOpen(false);
 
   //dispatch current user if user signup or login
   useEffect(() => {
@@ -50,6 +52,7 @@ const HomePage = () => {
   //redirect to signup page if user not authenticate
   useEffect(() => {
     if (!auth.reqUser) navigate("/signup");
+    else setOpen(true);
   }, [auth.reqUser]);
 
   useEffect(() => {
@@ -353,6 +356,11 @@ const HomePage = () => {
           </div>
         )}
       </div>
+      <SimpleSnackbar
+        message={`Welcome ${auth.reqUser?.username}`}
+        open={open}
+        handleClose={handleClose}
+        type={"success"}/>
     </div>
   );
 };

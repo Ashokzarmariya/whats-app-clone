@@ -9,7 +9,7 @@ export const register = (data) => async (dispatch) => {
     body: JSON.stringify(data),
   });
   const user = await res.json();
- 
+  console.log("register",user)
   if (user.token) localStorage.setItem("token", user.token);
   dispatch({ type: REGISTER, payload: user });
 };
